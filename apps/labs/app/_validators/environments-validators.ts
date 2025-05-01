@@ -18,6 +18,7 @@ export const UpdateEnvironmentGeneralSettingsFormSchema = z.object({
     .min(1, { message: ErrorMessages.RequiredField })
     .max(25, { message: 'This field must be 25 characters or fewer' }),
   appURL: z.string().url(),
+  logo: z.instanceof(FileList).optional(),
 });
 
 export type UpdateEnvironmentGeneralSettingsFormData = z.infer<
@@ -25,12 +26,33 @@ export type UpdateEnvironmentGeneralSettingsFormData = z.infer<
 >;
 
 export const UpdateEnvironmentAuthSettingsFormSchema = z.object({
-  authProvider: z.string({ required_error: ErrorMessages.RequiredField }),
-  tokenExpiration: z.string({ required_error: ErrorMessages.RequiredField }),
-  refreshTokenExpiration: z.string({
+  authProvider: z.string({
+    required_error: ErrorMessages.RequiredField
+  }),
+  tokenExpirationValue: z
+    .number({
+      required_error: ErrorMessages.RequiredField,
+      invalid_type_error: ErrorMessages.InvalidNumber,
+    })
+    .min(1, { message: ErrorMessages.MinValue.replace('{min}', '1') })
+    .max(54, { message: ErrorMessages.MaxValue.replace('{max}', '54') }),
+  tokenExpirationUnit: z.enum(['m', 'd'], {
     required_error: ErrorMessages.RequiredField,
   }),
-  enableSignUp: z.boolean(),
+
+  refreshTokenExpirationValue: z
+    .number({
+      required_error: ErrorMessages.RequiredField,
+      invalid_type_error: ErrorMessages.InvalidNumber,
+    })
+    .min(1, { message: ErrorMessages.MinValue.replace('{min}', '1') })
+    .max(54, { message: ErrorMessages.MaxValue.replace('{max}', '54') }),
+  
+  refreshTokenExpirationUnit: z.enum(['m', 'd'], {
+    required_error:ErrorMessages.RequiredField,
+  }),
+  
+    enableSignUp: z.boolean(),
   enableSignUpB2BOnly: z.boolean(),
   styles: z.object({
     primaryColor: z
