@@ -11,6 +11,7 @@ import React from 'react';
 import { Project } from '../_interfaces/project';
 import useOptimisticUpdate from './use-optimistic-update';
 import { useEnvironmentAppData } from '@/_hooks/use-environment-app-data';
+import { revalidateCache } from '@/_services/server-cache-service';
 
 type Params = {
   environmentId?: string;
@@ -127,6 +128,44 @@ export default function useEnvironment(
       });
 
       return Promise.reject(error);
+    }
+  }
+
+  async function updateLogoGeneralSettings(
+    environmentId: string,
+    payload: UpdateEnvironmentGeneralSettingsFormData,
+    showNotification = true,
+  ) {
+    try {
+      await labsAPI.patch<Environment>(
+        `/environments/${environmentId}/general-settings/logo`,
+        { file: payload.logo?.[0] },
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      await revalidateCache([`/${environmentId}/general-settings`]);
+
+      if (showNotification) {
+        toast({
+          title: 'Your Company Logo Changed',
+          description: 'The logo has been successfully changed.',
+        });
+      }
+    } catch (error: any) {
+      // VITOR > Fix error message later. Original from Organization is "console.error('useOrganization.updateLogo', error);"
+      console.error('Something is not right', error);
+      if (showNotification) {
+        toast({
+          title: 'Error',
+          description: error?.response?.data?.message || APIErrors.GenericFile,
+          variant: 'destructive',
+        });
+      }
+      throw error;
     }
   }
 
@@ -353,6 +392,7 @@ export default function useEnvironment(
     environmentError,
     createEnvironment,
     updateEnvironmentGeneralSettings,
+    updateLogoGeneralSettings,
     regenerateEnvironmentPublicKey,
     regenerateEnvironmentSecretKey,
     getEnvironmentSecretKey,
